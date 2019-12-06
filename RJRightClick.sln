@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.757
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RJRightClick", "RJRightClick\RJRightClick.csproj", "{92508193-4F0F-44ED-9CCE-5AAB2FA0D710}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSShellExtContextMenuHandler", "CSShellExtContextMenuHandler\CSShellExtContextMenuHandler.csproj", "{0041073D-2FA7-4B35-B904-9C606C89C8CD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{92508193-4F0F-44ED-9CCE-5AAB2FA0D710}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92508193-4F0F-44ED-9CCE-5AAB2FA0D710}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92508193-4F0F-44ED-9CCE-5AAB2FA0D710}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92508193-4F0F-44ED-9CCE-5AAB2FA0D710}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0041073D-2FA7-4B35-B904-9C606C89C8CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0041073D-2FA7-4B35-B904-9C606C89C8CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0041073D-2FA7-4B35-B904-9C606C89C8CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0041073D-2FA7-4B35-B904-9C606C89C8CD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {566ED1FD-A705-4BD5-84C1-6BC58961E3C8}
+	EndGlobalSection
+EndGlobal
