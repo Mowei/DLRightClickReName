@@ -1,14 +1,12 @@
 ﻿using CommandLine;
+using HtmlAgilityPack;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace RJRightClick
@@ -46,7 +44,7 @@ namespace RJRightClick
 
                     installTool.NotifyShell();
 
-                    MessageBox.Show( "Install finished.",
+                    MessageBox.Show("Install finished.",
                         "RJ Context Menu Installer",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Information);
@@ -69,15 +67,71 @@ namespace RJRightClick
 
                 if (!string.IsNullOrWhiteSpace(o.Site))
                 {
-                    string RJNumber = string.Join(" ", args);
                     Regex rgx = new Regex("(RJ\\d{6})", RegexOptions.IgnoreCase);
-                    var result = rgx.Match(RJNumber);
+                    var result = rgx.Match(o.Site);
                     if (result.Success)
                         System.Diagnostics.Process.Start($@"https://www.dlsite.com/home/work/=/product_id/{result.Value}.html");
                 }
                 if (!string.IsNullOrWhiteSpace(o.Rename))
                 {
 
+                    Regex rgx = new Regex("(RJ\\d{6})", RegexOptions.IgnoreCase);
+                    var result = rgx.Match(o.Rename);
+                    if (result.Success)
+                    {
+                        //RJ號
+                        var RJNumber = result.Value;
+
+                        var htmlWeb = new HtmlWeb();
+                        var query = $@"https://www.dlsite.com/home/work/=/product_id/{result.Value}.html";
+                        var doc = htmlWeb.Load(query);
+                        var response = doc.DocumentNode.SelectSingleNode("//div[@id='work_right_inner']");
+
+                        //名稱
+                        var work_name = response.SelectSingleNode("//h1[@id='work_name']//a").InnerText;
+
+                        //社團
+                        var maker_name = response.SelectSingleNode("//span[@class='maker_name']").InnerText;
+
+
+                        var results = response.SelectNodes("//table[@id='work_outline']//td");
+                        if (results != null)
+                        {
+                            //販售日
+                            var saleDate = results[0].InnerText.Replace("年", "").Replace("月", "").Replace("日", "").Substring(2);
+                            //作品形式
+                            var rjtype = string.Join("", results[3].SelectNodes("//div[@class='work_genre']//span").Select(x => $"({x.InnerText})"));
+
+                            var name = $"[{maker_name}][{saleDate}][{RJNumber}]{work_name}{rjtype}"
+                            .Replace("?", "？")
+                            .Replace("~", "～")
+                            .Replace("*", "＊")
+                            .Replace("/", "／")
+                            .Replace("\\", "＼")
+                            .Replace(":", "：")
+                            .Replace("\"", "＂")
+                            .Replace("<", "＜")
+                            .Replace(">", "＞")
+                            .Replace("|", "｜");
+
+                            try
+                            {
+                                var fileinfo = new FileInfo(o.Rename);
+                                var Extensions = fileinfo.Name.Split('.').ToList();
+                                Extensions.RemoveAt(0);
+                                var newFilename = name + "." + string.Join(".", Extensions);
+                                if (newFilename.Length >= 200) return;
+                                fileinfo.MoveTo(Path.Combine(fileinfo.Directory.FullName, newFilename));
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show($"命名失敗: {ex.InnerException.Message}", "失敗");
+                            }
+                            MessageBox.Show("命名成功!");
+                        }
+
+
+                    }
                 }
                 if (!string.IsNullOrWhiteSpace(o.Image))
                 {
@@ -233,7 +287,7 @@ namespace RJRightClick
             public static extern UInt32 SendMessage(IntPtr hWnd, UInt32 msg, UInt32 wParam, UInt32 lParam);
 
             [DllImport("user32.dll")]
-            private static extern bool SetProcessDPIAware(); 
+            private static extern bool SetProcessDPIAware();
         }
     }
 }

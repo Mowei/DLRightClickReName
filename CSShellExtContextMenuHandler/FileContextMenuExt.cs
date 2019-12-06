@@ -44,9 +44,9 @@ namespace CSShellExtContextMenuHandler
             //Load default items.
             
             menuItems.Add(new MenuItem("RJ Menu", true, null, ""));
-            menuItems.Add(new MenuItem("DLSite", true, null, "-site \"%APP%\""));
-            menuItems.Add(new MenuItem("Rename", true, null, "-rename \"%APP%\""));
-            menuItems.Add(new MenuItem("Image", true, null, "-image \"%APP%\""));
+            menuItems.Add(new MenuItem("DLSite", true, null, "--site \"%APP%\""));
+            menuItems.Add(new MenuItem("Rename", true, null, "--rename \"%APP%\""));
+            menuItems.Add(new MenuItem("Image", true, null, "--image \"%APP%\""));
 
         }
 

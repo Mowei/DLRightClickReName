@@ -1,0 +1,1 @@
+RJRightClick.exe --UnInstall
