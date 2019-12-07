@@ -21,10 +21,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Text;
+using System.Text.RegularExpressions;
 using IDataObject = System.Runtime.InteropServices.ComTypes.IDataObject;
 
 #endregion
@@ -37,16 +39,15 @@ namespace CSShellExtContextMenuHandler
     {
         // The name of the selected file.
         private readonly List<MenuItem> menuItems = new List<MenuItem>();
-        private string _selectedFile;
+        private List<string> SelectedFile = new List<string>();
 
         public FileContextMenuExt()
         {
             //Load default items.
-            
-            menuItems.Add(new MenuItem("RJ Menu", true, null, ""));
-            menuItems.Add(new MenuItem("DLSite", true, null, "--site \"%APP%\""));
-            menuItems.Add(new MenuItem("Rename", true, null, "--rename \"%APP%\""));
-            menuItems.Add(new MenuItem("Image", true, null, "--image \"%APP%\""));
+            menuItems.Add(new MenuItem("瀏覽DLSite網站", true, null, "--site %FILE_PATH%"));
+            menuItems.Add(new MenuItem("DLSite管理選單", true, null, ""));
+            menuItems.Add(new MenuItem("檔案重新命名", true, null, "--rename %FILE_PATH%"));
+            menuItems.Add(new MenuItem("下載sample圖片", true, null, "--image %FILE_PATH%"));
 
         }
 
@@ -73,13 +74,13 @@ namespace CSShellExtContextMenuHandler
             }
 
             var fe = new FORMATETC
-                     {
-                         cfFormat = (short)CLIPFORMAT.CF_HDROP,
-                         ptd = IntPtr.Zero,
-                         dwAspect = DVASPECT.DVASPECT_CONTENT,
-                         lindex = -1,
-                         tymed = TYMED.TYMED_HGLOBAL
-                     };
+            {
+                cfFormat = (short)CLIPFORMAT.CF_HDROP,
+                ptd = IntPtr.Zero,
+                dwAspect = DVASPECT.DVASPECT_CONTENT,
+                lindex = -1,
+                tymed = TYMED.TYMED_HGLOBAL
+            };
             STGMEDIUM stm;
 
             // The pDataObj pointer contains the objects being acted upon. In this 
@@ -102,20 +103,28 @@ namespace CSShellExtContextMenuHandler
 
                 // This code sample displays the custom context menu item when only 
                 // one file is selected. 
-                if (nFiles == 1)
+                if (nFiles >= 1)
                 {
-                    // Get the path of the file.
-                    var fileName = new StringBuilder(260);
-                    if (0 == NativeMethods.DragQueryFile(hDrop,
-                                                         0,
-                                                         fileName,
-                                                         fileName.Capacity))
+                    for (uint i = 0; i < nFiles; i++)
                     {
-                        Marshal.ThrowExceptionForHR(WinError.E_FAIL);
+                        // Get the path of the file.
+                        var fileName = new StringBuilder(260);
+                        if (0 == NativeMethods.DragQueryFile(hDrop,
+                                                             i,
+                                                             fileName,
+                                                             fileName.Capacity))
+                        {
+                            Marshal.ThrowExceptionForHR(WinError.E_FAIL);
+                        }
+
+                        Regex rgx = new Regex("(RJ\\d{6})", RegexOptions.IgnoreCase);
+                        var result = rgx.Match(fileName.ToString());
+                        if (!result.Success)
+                        {
+                            Marshal.ThrowExceptionForHR(WinError.E_FAIL);
+                        }
+                        SelectedFile.Add(fileName.ToString());
                     }
-
-                    _selectedFile = fileName.ToString();
-
                 }
                 else
                 {
@@ -133,8 +142,9 @@ namespace CSShellExtContextMenuHandler
 
         private void OnVerbDisplayFileName(string cmd)
         {
+            string cmdstring = string.Join(" ", SelectedFile.Select(x => $"\"{x}\""));
             Process.Start(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "RJRightClick.exe"),
-                          cmd.Replace("%APP%", _selectedFile));
+                          cmd.Replace("%FILE_PATH%", cmdstring));
         }
 
         private int RegisterMenuItem(uint id,
@@ -225,41 +235,31 @@ namespace CSShellExtContextMenuHandler
             sep.fType = MFT.MFT_SEPARATOR;
             if (!NativeMethods.InsertMenuItem(hMenu, 0, true, ref sep))
                 return Marshal.GetHRForLastWin32Error();
-           
-            // Register PopupMenu
-            var hSubMenu = NativeMethods.CreatePopupMenu();
-            var item = menuItems[0];
-            RegisterMenuItem(0, idCmdFirst, item.Text, true, IntPtr.Zero, hSubMenu, 1, hMenu);
 
             // Register item
-            item = menuItems[1];
-            RegisterMenuItem(1, idCmdFirst, item.Text, true, IntPtr.Zero, IntPtr.Zero, 0, hSubMenu);
+            var item = menuItems[0];
+            RegisterMenuItem(0, idCmdFirst, item.Text, true, IntPtr.Zero, IntPtr.Zero, 1, hMenu);
 
-            // Add a separator.
-            sep = new MENUITEMINFO();
-            sep.cbSize = (uint)Marshal.SizeOf(sep);
-            sep.fMask = MIIM.MIIM_TYPE;
-            sep.fType = MFT.MFT_SEPARATOR;
-            NativeMethods.InsertMenuItem(hSubMenu, 1, true, ref sep);
+            // Register PopupMenu
+            var hSubMenu = NativeMethods.CreatePopupMenu();
+            item = menuItems[1];
+            RegisterMenuItem(1, idCmdFirst, item.Text, true, IntPtr.Zero, hSubMenu, 2, hMenu);
+
 
             // Register item
             item = menuItems[2];
-            RegisterMenuItem(2, idCmdFirst, item.Text, true, IntPtr.Zero, IntPtr.Zero, 2, hSubMenu);
+            RegisterMenuItem(2, idCmdFirst, item.Text, true, IntPtr.Zero, IntPtr.Zero, 0, hSubMenu);
 
             // Register item
             item = menuItems[3];
-            RegisterMenuItem(3, idCmdFirst, item.Text, true, IntPtr.Zero, IntPtr.Zero, 3, hSubMenu);
-
+            RegisterMenuItem(3, idCmdFirst, item.Text, true, IntPtr.Zero, IntPtr.Zero, 1, hSubMenu);
 
             // Add a separator.
             sep = new MENUITEMINFO();
             sep.cbSize = (uint)Marshal.SizeOf(sep);
             sep.fMask = MIIM.MIIM_TYPE;
             sep.fType = MFT.MFT_SEPARATOR;
-            NativeMethods.InsertMenuItem(hSubMenu,
-                                         (uint)menuItems.FindAll(t => t.ShowInMainMenu != true).Count - 4,
-                                         true,
-                                         ref sep);
+            NativeMethods.InsertMenuItem(hMenu, 3, true, ref sep);
 
             // Return an HRESULT value with the severity set to SEVERITY_SUCCESS. 
             // Set the code value to the total number of items added.
@@ -275,7 +275,7 @@ namespace CSShellExtContextMenuHandler
         /// </param>
         public void InvokeCommand(IntPtr pici)
         {
-            var ici = (CMINVOKECOMMANDINFO)Marshal.PtrToStructure(pici, typeof (CMINVOKECOMMANDINFO));
+            var ici = (CMINVOKECOMMANDINFO)Marshal.PtrToStructure(pici, typeof(CMINVOKECOMMANDINFO));
 
             var item = menuItems[NativeMethods.LowWord(ici.verb.ToInt32())];
 

@@ -1,8 +1,10 @@
 ﻿using CommandLine;
 using HtmlAgilityPack;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
@@ -22,13 +24,13 @@ namespace RJRightClick
             public bool UnInstall { get; set; }
 
             [Option('s', "site", Required = false, HelpText = "Go to DLSite")]
-            public string Site { get; set; }
+            public IEnumerable<string> Site { get; set; }
 
             [Option('r', "rename", Required = false, HelpText = "rename file")]
-            public string Rename { get; set; }
+            public IEnumerable<string> Rename { get; set; }
 
             [Option('i', "image", Required = false, HelpText = "get image")]
-            public string Image { get; set; }
+            public IEnumerable<string> Image { get; set; }
 
         }
 
@@ -65,79 +67,117 @@ namespace RJRightClick
                     return;
                 }
 
-                if (!string.IsNullOrWhiteSpace(o.Site))
+                if (o.Site.Count() > 0)
                 {
-                    Regex rgx = new Regex("(RJ\\d{6})", RegexOptions.IgnoreCase);
-                    var result = rgx.Match(o.Site);
-                    if (result.Success)
-                        System.Diagnostics.Process.Start($@"https://www.dlsite.com/home/work/=/product_id/{result.Value}.html");
-                }
-                if (!string.IsNullOrWhiteSpace(o.Rename))
-                {
-
-                    Regex rgx = new Regex("(RJ\\d{6})", RegexOptions.IgnoreCase);
-                    var result = rgx.Match(o.Rename);
-                    if (result.Success)
+                    foreach (var filePath in o.Site)
                     {
-                        //RJ號
-                        var RJNumber = result.Value;
-
-                        var htmlWeb = new HtmlWeb();
-                        var query = $@"https://www.dlsite.com/home/work/=/product_id/{result.Value}.html";
-                        var doc = htmlWeb.Load(query);
-                        var response = doc.DocumentNode.SelectSingleNode("//div[@id='work_right_inner']");
-
-                        //名稱
-                        var work_name = response.SelectSingleNode("//h1[@id='work_name']//a").InnerText;
-
-                        //社團
-                        var maker_name = response.SelectSingleNode("//span[@class='maker_name']").InnerText;
-
-
-                        var results = response.SelectNodes("//table[@id='work_outline']//td");
-                        if (results != null)
+                        Regex rgx = new Regex("(RJ\\d{6})", RegexOptions.IgnoreCase);
+                        var result = rgx.Match(filePath);
+                        if (result.Success)
                         {
-                            //販售日
-                            var saleDate = results[0].InnerText.Replace("年", "").Replace("月", "").Replace("日", "").Substring(2);
-                            //作品形式
-                            var rjtype = string.Join("", results[3].SelectNodes("//div[@class='work_genre']//span").Select(x => $"({x.InnerText})"));
-
-                            var name = $"[{maker_name}][{saleDate}][{RJNumber}]{work_name}{rjtype}"
-                            .Replace("?", "？")
-                            .Replace("~", "～")
-                            .Replace("*", "＊")
-                            .Replace("/", "／")
-                            .Replace("\\", "＼")
-                            .Replace(":", "：")
-                            .Replace("\"", "＂")
-                            .Replace("<", "＜")
-                            .Replace(">", "＞")
-                            .Replace("|", "｜");
-
-                            try
-                            {
-                                var fileinfo = new FileInfo(o.Rename);
-                                var Extensions = fileinfo.Name.Split('.').ToList();
-                                Extensions.RemoveAt(0);
-                                var newFilename = name + "." + string.Join(".", Extensions);
-                                if (newFilename.Length >= 200) return;
-                                fileinfo.MoveTo(Path.Combine(fileinfo.Directory.FullName, newFilename));
-                            }
-                            catch (Exception ex)
-                            {
-                                MessageBox.Show($"命名失敗: {ex.InnerException.Message}", "失敗");
-                            }
-                            MessageBox.Show("命名成功!");
+                            var RJNumber = result.Value;
+                            System.Diagnostics.Process.Start($@"https://www.dlsite.com/home/work/=/product_id/{RJNumber}.html");
                         }
-
-
                     }
                 }
-                if (!string.IsNullOrWhiteSpace(o.Image))
+                if (o.Rename.Count() > 0)
                 {
+                    foreach (var filePath in o.Rename)
+                    {
+                        Regex rgx = new Regex("(RJ\\d{6})", RegexOptions.IgnoreCase);
+                        var result = rgx.Match(filePath);
+                        if (result.Success)
+                        {
+                            //RJ號
+                            var RJNumber = result.Value;
 
+                            var htmlWeb = new HtmlWeb();
+                            var query = $@"https://www.dlsite.com/home/work/=/product_id/{result.Value}.html";
+                            var doc = htmlWeb.Load(query);
+                            var response = doc.DocumentNode.SelectSingleNode("//div[@id='work_right_inner']");
+
+                            //名稱
+                            var work_name = response.SelectSingleNode("//h1[@id='work_name']//a").InnerText;
+
+                            //社團
+                            var maker_name = response.SelectSingleNode("//span[@class='maker_name']").InnerText;
+
+
+                            var results = response.SelectNodes("//table[@id='work_outline']//td");
+                            if (results != null)
+                            {
+                                //販售日
+                                var saleDate = results[0].InnerText.Replace("年", "").Replace("月", "").Replace("日", "").Substring(2);
+                                //作品形式
+                                var rjtype = string.Join("", results[3].SelectNodes("//div[@class='work_genre']//span").Select(x => $"({x.InnerText})"));
+
+                                var name = $"[{maker_name}][{saleDate}][{RJNumber}]{work_name}{rjtype}"
+                                        .Replace("?", "？")
+                                        .Replace("~", "～")
+                                        .Replace("*", "＊")
+                                        .Replace("/", "／")
+                                        .Replace("\\", "＼")
+                                        .Replace(":", "：")
+                                        .Replace("\"", "＂")
+                                        .Replace("<", "＜")
+                                        .Replace(">", "＞")
+                                        .Replace("|", "｜");
+
+                                try
+                                {
+                                    var fileinfo = new FileInfo(filePath);
+                                    var Extensions = fileinfo.Name.Split('.').ToList();
+                                    Extensions.RemoveAt(0);
+                                    var newFilename = name + "." + string.Join(".", Extensions);
+                                    if (newFilename.Length >= 200) return;
+                                    fileinfo.MoveTo(Path.Combine(fileinfo.Directory.FullName, newFilename));
+                                }
+                                catch (Exception ex)
+                                {
+                                    MessageBox.Show($"命名失敗: {ex.InnerException.Message}", "失敗");
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                    MessageBox.Show("命名成功!");
                 }
+                if (o.Image.Count() > 0)
+                {
+                    foreach (var filePath in o.Image)
+                    {
+                        var targetDir = Path.GetDirectoryName(filePath);
 
+                        Regex rgx = new Regex("(RJ\\d{6})", RegexOptions.IgnoreCase);
+                        var result = rgx.Match(filePath);
+                        if (result.Success)
+                        {
+                            //RJ號
+                            var RJNumber = result.Value;
+
+                            var htmlWeb = new HtmlWeb();
+                            var query = $@"https://www.dlsite.com/home/work/=/product_id/{result.Value}.html";
+                            var doc = htmlWeb.Load(query);
+                            var results = doc.DocumentNode.SelectNodes("//div[@class='product-slider-data']//div");
+
+                            if (results != null)
+                            {
+                                foreach (var node in results)
+                                {
+                                    var imageUrl = "https:" + node.Attributes["data-src"].Value;
+                                    Uri uri = new Uri(imageUrl);
+                                    string filename = Path.GetFileName(uri.LocalPath);
+
+                                    using (WebClient client = new WebClient())
+                                    {
+                                        client.DownloadFile(imageUrl, Path.Combine(targetDir, filename));
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+                }
             });
 
         }
