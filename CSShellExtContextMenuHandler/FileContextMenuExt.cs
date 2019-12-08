@@ -17,9 +17,11 @@ MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
 
 #region Using directives
 
+using CSShellExtContextMenuHandler.Properties;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -40,9 +42,15 @@ namespace CSShellExtContextMenuHandler
         // The name of the selected file.
         private readonly List<MenuItem> menuItems = new List<MenuItem>();
         private List<string> SelectedFile = new List<string>();
+        private IntPtr menuBmp = IntPtr.Zero;
 
         public FileContextMenuExt()
         {
+            // Load the bitmap for the menu item.
+            Bitmap bmp = Resources.OK;
+            bmp.MakeTransparent(bmp.GetPixel(0, 0));
+            this.menuBmp = bmp.GetHbitmap();
+
             //Load default items.
             menuItems.Add(new MenuItem("瀏覽DLSite網站", true, null, "--site %FILE_PATH%"));
             menuItems.Add(new MenuItem("DLSite管理選單", true, null, ""));
@@ -238,7 +246,7 @@ namespace CSShellExtContextMenuHandler
 
             // Register item
             var item = menuItems[0];
-            RegisterMenuItem(0, idCmdFirst, item.Text, true, IntPtr.Zero, IntPtr.Zero, 1, hMenu);
+            RegisterMenuItem(0, idCmdFirst, item.Text, true, menuBmp, IntPtr.Zero, 1, hMenu);
 
             // Register PopupMenu
             var hSubMenu = NativeMethods.CreatePopupMenu();
