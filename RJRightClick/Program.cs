@@ -103,13 +103,13 @@ namespace RJRightClick
                             var doc = htmlWeb.Load(query);
 
                             //名稱
-                            var work_name = doc.DocumentNode.SelectSingleNode(WorkNameXPath).InnerText;
+                            var work_name = doc.DocumentNode.SelectSingleNode(WorkNameXPath).InnerText.Trim();
                             //社團
-                            var maker_name = doc.DocumentNode.SelectSingleNode(MakerNameXPath).InnerText;
+                            var maker_name = doc.DocumentNode.SelectSingleNode(MakerNameXPath).InnerText.Trim();
                             //販售日
-                            var sale_Date = doc.DocumentNode.SelectSingleNode(SaleDateXPath).InnerText.Replace("年", "").Replace("月", "").Replace("日", "").Substring(2);
+                            var sale_Date = doc.DocumentNode.SelectSingleNode(SaleDateXPath).InnerText.Trim().Replace("年", "").Replace("月", "").Replace("日", "").Substring(2);
                             //作品形式
-                            var work_genre = string.Join("", doc.DocumentNode.SelectNodes(WorkGenreXPath).Select(x => $"({x.InnerText})"));
+                            var work_genre = string.Join("", doc.DocumentNode.SelectNodes(WorkGenreXPath).Select(x => $"({x.InnerText.Trim()})"));
 
                             var customTypes = "";
                             var genreTypes = ConfigurationManager.GetSection("genreTypes") as NameValueCollection;
@@ -120,7 +120,7 @@ namespace RJRightClick
                                     var genType = doc.DocumentNode.SelectSingleNode(genreTypes[key]);
                                     if (genType != null)
                                     {
-                                        customTypes += $@"({genType.InnerText})";
+                                        customTypes += $@"({genType.InnerText.Trim()})";
                                     }
                                 }
                             }
