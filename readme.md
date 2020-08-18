@@ -10,13 +10,15 @@ Install.bat
 <a href="https://i.imgur.com/w6oNoqp.png"><img src="https://i.imgur.com/w6oNoqp.png" title="source: imgur.com" /></a>
 
 # 設定
-NameFormatTemplate : 自定義重新命名檔名規則
-MakerNameXPath  :社團名稱
-WorkNameXPath   :標題名稱
-SaleDateXPath   :販售日
-WorkGenreXPath  :作品形式
+App.config     
 
-value 部分用html tag 去鎖定資料
+NameFormatTemplate : 自定義重新命名檔名規則     
+MakerNameXPath  :社團名稱     
+WorkNameXPath   :標題名稱     
+SaleDateXPath   :販售日     
+WorkGenreXPath  :作品形式     
+     
+value 部分用html tag 去鎖定資料     
 
 ```=xml
 <?xml version="1.0" encoding="utf-8"?>
