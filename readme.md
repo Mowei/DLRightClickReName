@@ -18,7 +18,7 @@ WorkNameXPath   :標題名稱
 SaleDateXPath   :販售日     
 WorkGenreXPath  :作品形式     
      
-value 部分用html tag 去鎖定資料     
+value 部分用 HTML Tag 及 Class , ID 去鎖定資料     
 
 ```=xml
 <?xml version="1.0" encoding="utf-8"?>
