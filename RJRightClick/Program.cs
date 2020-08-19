@@ -1,13 +1,7 @@
 ﻿using CommandLine;
-using HtmlAgilityPack;
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Configuration;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace RJRightClick
@@ -24,6 +18,9 @@ namespace RJRightClick
 
             [Option('s', "site", Required = false, HelpText = "Go to DLSite")]
             public IEnumerable<string> Site { get; set; }
+
+            [Option('g', "GetNewname", Required = false, HelpText = "Get Newname")]
+            public IEnumerable<string> Newname { get; set; }
 
             [Option('r', "rename", Required = false, HelpText = "rename file")]
             public IEnumerable<string> Rename { get; set; }
@@ -69,88 +66,46 @@ namespace RJRightClick
 
                 if (o.Site.Count() > 0)
                 {
+                    var rjUtil = new RJRename.Core.Util();
                     foreach (var filePath in o.Site)
                     {
-                        Regex rgx = new Regex("(RJ\\d{6})", RegexOptions.IgnoreCase);
-                        var result = rgx.Match(filePath);
-                        if (result.Success)
+                        var RJNumber = rjUtil.GetRJNumber(filePath);
+                        if (!string.IsNullOrEmpty(RJNumber))
                         {
-                            var RJNumber = result.Value;
                             System.Diagnostics.Process.Start($@"https://www.dlsite.com/home/work/=/product_id/{RJNumber}.html");
+                        }
+                    }
+                }
+
+                if (o.Newname.Count() > 0)
+                {
+                    var rjUtil = new RJRename.Core.Util();
+                    foreach (var str in o.Newname)
+                    {
+                        var newName = rjUtil.GetRJNewName(str);
+                        if (!string.IsNullOrEmpty(newName))
+                        {
+                            MessageBox.Show(newName);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Not Found!");
                         }
                     }
                 }
 
                 if (o.Rename.Count() > 0)
                 {
-                    var NameFormatTemplate = ConfigurationManager.AppSettings["NameFormatTemplate"];
-                    var WorkNameXPath = ConfigurationManager.AppSettings["WorkNameXPath"];
-                    var MakerNameXPath = ConfigurationManager.AppSettings["MakerNameXPath"];
-                    var SaleDateXPath = ConfigurationManager.AppSettings["SaleDateXPath"];
-                    var WorkGenreXPath = ConfigurationManager.AppSettings["WorkGenreXPath"];
+                    var rjUtil = new RJRename.Core.Util();
 
                     foreach (var filePath in o.Rename)
                     {
-                        Regex rgx = new Regex("(RJ\\d{6})", RegexOptions.IgnoreCase);
-                        var result = rgx.Match(filePath);
-                        if (result.Success)
+                        var RJNumber = rjUtil.GetRJNumber(filePath);
+                        if (!string.IsNullOrEmpty(RJNumber))
                         {
-                            //RJ號
-                            var RJNumber = result.Value;
-
-                            var htmlWeb = new HtmlWeb();
-                            var query = $@"https://www.dlsite.com/home/work/=/product_id/{result.Value}.html";
-                            var doc = htmlWeb.Load(query);
-
-                            //名稱
-                            var work_name = doc.DocumentNode.SelectSingleNode(WorkNameXPath).InnerText.Trim();
-                            //社團
-                            var maker_name = doc.DocumentNode.SelectSingleNode(MakerNameXPath).InnerText.Trim();
-                            //販售日
-                            var sale_Date = doc.DocumentNode.SelectSingleNode(SaleDateXPath).InnerText.Trim().Replace("年", "").Replace("月", "").Replace("日", "").Substring(2);
-                            //作品形式
-                            var work_genre = string.Join("", doc.DocumentNode.SelectNodes(WorkGenreXPath).Select(x => $"({x.InnerText.Trim()})"));
-
-                            var customTypes = "";
-                            var genreTypes = ConfigurationManager.GetSection("genreTypes") as NameValueCollection;
-                            if (genreTypes.Count >= 0)
-                            {
-                                foreach (var key in genreTypes.AllKeys)
-                                {
-                                    var genType = doc.DocumentNode.SelectSingleNode(genreTypes[key]);
-                                    if (genType != null)
-                                    {
-                                        customTypes += $@"({genType.InnerText.Trim()})";
-                                    }
-                                }
-                            }
-
-                            var name = NameFormatTemplate
-                            .Replace("%maker_name%", maker_name)
-                            .Replace("%sale_date%", sale_Date)
-                            .Replace("%number%", RJNumber)
-                            .Replace("%work_name%", work_name)
-                            .Replace("%work_genre%", work_genre)
-                            .Replace("%custom_types%", customTypes)
-                            .Replace("?", "？")
-                            .Replace("~", "～")
-                            .Replace("*", "＊")
-                            .Replace("/", "／")
-                            .Replace("\\", "＼")
-                            .Replace(":", "：")
-                            .Replace("\"", "＂")
-                            .Replace("<", "＜")
-                            .Replace(">", "＞")
-                            .Replace("|", "｜");
-
                             try
                             {
-                                var fileinfo = new FileInfo(filePath);
-                                var Extensions = fileinfo.Name.Split('.').ToList();
-                                Extensions.RemoveAt(0);
-                                var newFilename = name + "." + string.Join(".", Extensions);
-                                if (newFilename.Length >= 200) return;
-                                fileinfo.MoveTo(Path.Combine(fileinfo.Directory.FullName, newFilename));
+                                rjUtil.ReNameFile(RJNumber, filePath);
                             }
                             catch (Exception ex)
                             {
@@ -164,39 +119,14 @@ namespace RJRightClick
                 }
                 if (o.Image.Count() > 0)
                 {
-                    var ProductSampleImagesXPath = ConfigurationManager.AppSettings["ProductSampleImagesXPath"];
+                    var rjUtil = new RJRename.Core.Util();
 
                     foreach (var filePath in o.Image)
                     {
-                        var targetDir = Path.GetDirectoryName(filePath);
-
-                        Regex rgx = new Regex("(RJ\\d{6})", RegexOptions.IgnoreCase);
-                        var result = rgx.Match(filePath);
-                        if (result.Success)
+                        var RJNumber = rjUtil.GetRJNumber(filePath);
+                        if (!string.IsNullOrEmpty(RJNumber))
                         {
-                            //RJ號
-                            var RJNumber = result.Value;
-
-                            var htmlWeb = new HtmlWeb();
-                            var query = $@"https://www.dlsite.com/home/work/=/product_id/{result.Value}.html";
-                            var doc = htmlWeb.Load(query);
-                            var results = doc.DocumentNode.SelectNodes(ProductSampleImagesXPath);
-
-                            if (results != null)
-                            {
-                                foreach (var node in results)
-                                {
-                                    var imageUrl = "https:" + node.Attributes["data-src"].Value;
-                                    Uri uri = new Uri(imageUrl);
-                                    string filename = Path.GetFileName(uri.LocalPath);
-
-                                    using (WebClient client = new WebClient())
-                                    {
-                                        client.DownloadFile(imageUrl, Path.Combine(targetDir, filename));
-                                    }
-                                }
-                            }
-
+                            rjUtil.DownLoadImg(RJNumber, filePath);
                         }
                     }
                 }

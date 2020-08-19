@@ -56,7 +56,7 @@ namespace CSShellExtContextMenuHandler
             menuItems.Add(new MenuItem("DLSite管理選單", true, null, ""));
             menuItems.Add(new MenuItem("檔案重新命名", true, null, "--rename %FILE_PATH%"));
             menuItems.Add(new MenuItem("下載sample圖片", true, null, "--image %FILE_PATH%"));
-
+            menuItems.Add(new MenuItem("測試命名功能", true, null, "--GetNewname %FILE_PATH%"));
         }
 
         #region IShellExtInit Members
@@ -261,6 +261,10 @@ namespace CSShellExtContextMenuHandler
             // Register item
             item = menuItems[3];
             RegisterMenuItem(3, idCmdFirst, item.Text, true, IntPtr.Zero, IntPtr.Zero, 1, hSubMenu);
+
+            // Register item
+            item = menuItems[4];
+            RegisterMenuItem(4, idCmdFirst, item.Text, true, IntPtr.Zero, IntPtr.Zero, 2, hSubMenu);
 
             // Add a separator.
             sep = new MENUITEMINFO();
