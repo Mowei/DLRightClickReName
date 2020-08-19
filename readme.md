@@ -1,19 +1,19 @@
 RJ改名工具
 ======
 # CLI
-```
-#
---產出檔名 -g
-chcp 65001 | RJRenameCLI -g RJ192588
-[ベレス解部][170117][RJ192588]年下式幼児プレイ 小夜子(ボイス・ASMR)
 
---開啟DLSite(Win Only) -s
+```
+#產出檔名 -g
+chcp 65001 | RJRenameCLI -g RJ192588
+> [ベレス解部][170117][RJ192588]年下式幼児プレイ 小夜子(ボイス・ASMR)
+
+#開啟DLSite(Win Only) -s
 RJRenameCLI -s RJ192588
 
---重新命名檔案 -r
+#重新命名檔案 -r
 RJRenameCLI -r 檔案路徑(檔案須包含編號)
 
---下載圖片 -i
+#下載圖片 -i
 RJRenameCLI -i 檔案路徑(檔案須包含編號)
 
 ```
