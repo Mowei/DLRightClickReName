@@ -17,7 +17,7 @@ namespace RJRename.Core
         public Util()
         {
             var builder = new ConfigurationBuilder()
-              .SetBasePath(Directory.GetCurrentDirectory())
+              .SetBasePath(System.AppDomain.CurrentDomain.BaseDirectory)
               .AddJsonFile("appsettings.json");
             var config = builder.Build();
             config.Bind(AppSetting);
