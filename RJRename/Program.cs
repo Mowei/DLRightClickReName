@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace RJRename.CLI
 {
@@ -38,11 +39,36 @@ namespace RJRename.CLI
                         var RJNumber = rjUtil.GetRJNumber(filePath);
                         if (!string.IsNullOrEmpty(RJNumber))
                         {
-                            ProcessStartInfo startInfo = new ProcessStartInfo($@"https://www.dlsite.com/home/work/=/product_id/{RJNumber}.html")
+                            var url = $@"https://www.dlsite.com/home/work/=/product_id/{RJNumber}.html";
+                            try
                             {
-                                UseShellExecute = true
-                            };
-                            Process.Start(startInfo);
+                                ProcessStartInfo startInfo = new ProcessStartInfo(url)
+                                {
+                                    UseShellExecute = true
+                                };
+                                Process.Start(startInfo);
+                            }
+                            catch
+                            {
+                                // hack because of this: https://github.com/dotnet/corefx/issues/10361
+                                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                                {
+                                    url = url.Replace("&", "^&");
+                                    Process.Start(new ProcessStartInfo("cmd", $"/c start {url}") { CreateNoWindow = true });
+                                }
+                                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                                {
+                                    Process.Start("xdg-open", url);
+                                }
+                                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                                {
+                                    Process.Start("open", url);
+                                }
+                                else
+                                {
+                                    throw;
+                                }
+                            }
                         }
                     }
                 }
@@ -60,7 +86,7 @@ namespace RJRename.CLI
                         else
                         {
                             Console.WriteLine("Not Found!");
-                        }      
+                        }
                     }
                 }
 

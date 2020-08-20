@@ -93,7 +93,6 @@
     <None Include="Install.bat">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RJRename.Core\RJRename.Core.csproj">

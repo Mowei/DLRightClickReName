@@ -15,20 +15,4 @@
     <ProjectReference Include="..\RJRename.Core\RJRename.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Update="appsettings.Designer.cs">
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <DependentUpon>appsettings.json</DependentUpon>
-      <AutoGen>True</AutoGen>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="appsettings.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <LastGenOutput>appsettings.Designer.cs</LastGenOutput>
-      <Generator>SettingsSingleFileGenerator</Generator>
-    </None>
-  </ItemGroup>
-
 </Project>
