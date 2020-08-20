@@ -1,4 +1,5 @@
 ﻿using HtmlAgilityPack;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Specialized;
 using System.Configuration;
@@ -11,12 +12,16 @@ namespace RJRename.Core
 {
     public class Util
     {
-        string NameFormatTemplate = ConfigurationManager.AppSettings["NameFormatTemplate"];
-        string WorkNameXPath = ConfigurationManager.AppSettings["WorkNameXPath"];
-        string MakerNameXPath = ConfigurationManager.AppSettings["MakerNameXPath"];
-        string SaleDateXPath = ConfigurationManager.AppSettings["SaleDateXPath"];
-        string WorkGenreXPath = ConfigurationManager.AppSettings["WorkGenreXPath"];
-        string ProductSampleImagesXPath = ConfigurationManager.AppSettings["ProductSampleImagesXPath"];
+        public AppSetting AppSetting { get; set; } = new AppSetting();
+
+        public Util()
+        {
+            var builder = new ConfigurationBuilder()
+              .SetBasePath(Directory.GetCurrentDirectory())
+              .AddJsonFile("appsettings.json");
+            var config = builder.Build();
+            config.Bind(AppSetting);
+        }
         public string GetRJNumber(string rjStr)
         {
             Regex rgx = new Regex("(RJ\\d{6})", RegexOptions.IgnoreCase);
@@ -38,29 +43,42 @@ namespace RJRename.Core
                 var doc = htmlWeb.Load(query);
 
                 //名稱
-                var work_name = doc.DocumentNode.SelectSingleNode(WorkNameXPath).InnerText.Trim();
+                var work_name = doc.DocumentNode.SelectSingleNode(AppSetting.WorkNameXPath).InnerText.Trim();
                 //社團
-                var maker_name = doc.DocumentNode.SelectSingleNode(MakerNameXPath).InnerText.Trim();
+                var maker_name = doc.DocumentNode.SelectSingleNode(AppSetting.MakerNameXPath).InnerText.Trim();
                 //販售日
-                var sale_Date = doc.DocumentNode.SelectSingleNode(SaleDateXPath).InnerText.Trim().Replace("年", "").Replace("月", "").Replace("日", "").Substring(2);
+                var sale_Date = doc.DocumentNode.SelectSingleNode(AppSetting.SaleDateXPath).InnerText.Trim().Replace("年", "").Replace("月", "").Replace("日", "").Substring(2);
                 //作品形式
-                var work_genre = string.Join("", doc.DocumentNode.SelectNodes(WorkGenreXPath).Select(x => $"({x.InnerText.Trim()})"));
+                var work_genre = string.Join("", doc.DocumentNode.SelectNodes(AppSetting.WorkGenreXPath).Select(x => $"({x.InnerText.Trim()})"));
 
                 var customTypes = "";
-                var genreTypes = ConfigurationManager.GetSection("genreTypes") as NameValueCollection;
+                var genreTypes = AppSetting.GenreTypes;
                 if (genreTypes.Count >= 0)
                 {
-                    foreach (var key in genreTypes.AllKeys)
+                    foreach (var genType in genreTypes)
                     {
-                        var genType = doc.DocumentNode.SelectSingleNode(genreTypes[key]);
-                        if (genType != null)
+                        var genreVal = doc.DocumentNode.SelectSingleNode(genType.Value);
+                        if (genreVal != null)
                         {
-                            customTypes += $@"({genType.InnerText.Trim()})";
+                            customTypes += $@"({genreVal.InnerText.Trim()})";
                         }
                     }
                 }
 
-                var name = NameFormatTemplate
+                var name = AppSetting.NameFormatTemplate;
+                var customXPath = AppSetting.CustomXPath;
+                if (customXPath.Count >= 0)
+                {
+                    foreach (var custom in customXPath)
+                    {
+                        var customVal = doc.DocumentNode.SelectSingleNode(custom.Value);
+                        if (customVal != null)
+                        {
+                            name = name.Replace(custom.Key, customVal.InnerText.Trim());
+                        }
+                    }
+                }
+                name = name
                 .Replace("%maker_name%", maker_name)
                 .Replace("%sale_date%", sale_Date)
                 .Replace("%number%", RJNumber)
@@ -115,7 +133,7 @@ namespace RJRename.Core
                 var htmlWeb = new HtmlWeb();
                 var query = $@"https://www.dlsite.com/home/work/=/product_id/{RJNumber}.html";
                 var doc = htmlWeb.Load(query);
-                var results = doc.DocumentNode.SelectNodes(ProductSampleImagesXPath);
+                var results = doc.DocumentNode.SelectNodes(AppSetting.ProductSampleImagesXPath);
 
                 if (results != null)
                 {

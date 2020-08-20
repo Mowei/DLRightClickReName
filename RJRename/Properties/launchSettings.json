@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "RJRenameCLI": {
+      "commandName": "Project",
+      "commandLineArgs": "-g RJ134183"
+    }
+  }
+}
