@@ -1,8 +1,5 @@
 ﻿using HtmlAgilityPack;
-using Microsoft.Extensions.Configuration;
 using System;
-using System.Collections.Specialized;
-using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -12,15 +9,11 @@ namespace RJRename.Core
 {
     public class Util
     {
-        public AppSetting AppSetting { get; set; } = new AppSetting();
+        public AppSetting AppSetting { get; set; }
 
-        public Util()
+        public Util(AppSetting setting)
         {
-            var builder = new ConfigurationBuilder()
-              .SetBasePath(System.AppDomain.CurrentDomain.BaseDirectory)
-              .AddJsonFile("appsettings.json");
-            var config = builder.Build();
-            config.Bind(AppSetting);
+            AppSetting = setting;
         }
         public string GetRJNumber(string rjStr)
         {

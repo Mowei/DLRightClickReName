@@ -1,4 +1,6 @@
 ﻿using CommandLine;
+using Microsoft.Extensions.Configuration;
+using RJRename.Core;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -31,9 +33,13 @@ namespace RJRename.CLI
             Parser.Default.ParseArguments<Options>(args)
             .WithParsed<Options>(o =>
             {
+                var builder = new ConfigurationBuilder().SetBasePath(System.AppDomain.CurrentDomain.BaseDirectory).AddJsonFile("appsettings.json");
+                var config = builder.Build();
+                AppSetting setting = new AppSetting();
+                config.Bind(setting);
+                var rjUtil = new Util(setting);
                 if (o.Site.Count() > 0)
                 {
-                    var rjUtil = new RJRename.Core.Util();
                     foreach (var filePath in o.Site)
                     {
                         var RJNumber = rjUtil.GetRJNumber(filePath);
@@ -75,7 +81,6 @@ namespace RJRename.CLI
 
                 if (o.Newname.Count() > 0)
                 {
-                    var rjUtil = new RJRename.Core.Util();
                     foreach (var str in o.Newname)
                     {
                         var newName = rjUtil.GetRJNewName(str);
@@ -92,8 +97,6 @@ namespace RJRename.CLI
 
                 if (o.Rename.Count() > 0)
                 {
-                    var rjUtil = new RJRename.Core.Util();
-
                     foreach (var filePath in o.Rename)
                     {
                         var RJNumber = rjUtil.GetRJNumber(filePath);
@@ -115,8 +118,6 @@ namespace RJRename.CLI
                 }
                 if (o.Image.Count() > 0)
                 {
-                    var rjUtil = new RJRename.Core.Util();
-
                     foreach (var filePath in o.Image)
                     {
                         var RJNumber = rjUtil.GetRJNumber(filePath);
