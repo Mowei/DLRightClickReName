@@ -1,5 +1,5 @@
 ﻿using CommandLine;
-using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using RJRename.Core;
 using System;
 using System.Collections.Generic;
@@ -38,11 +38,10 @@ namespace RJRightClick
             Parser.Default.ParseArguments<Options>(args)
             .WithParsed<Options>(o =>
             {
-                var builder = new ConfigurationBuilder().SetBasePath(System.AppDomain.CurrentDomain.BaseDirectory).AddJsonFile("appsettings.json");
-                var config = builder.Build();
-                AppSetting setting = new AppSetting();
-                config.Bind(setting);
+                var json = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json"));
+                AppSetting setting = JsonConvert.DeserializeObject<AppSetting>(json);
                 var rjUtil = new Util(setting);
+
                 if (o.Install)
                 {
                     var installTool = new MenuInstall();
